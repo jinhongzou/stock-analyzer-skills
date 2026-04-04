@@ -2,6 +2,18 @@
 
 基于 akshare 数据源的 A 股多维度分析 OpenCode Skills，覆盖 **基本面分析** + **技术面分析** + **新闻风险评估** + **综合评分** 四大维度。
 
+---
+## 演示
+
+![示例GIF](./static/1.png)
+![示例GIF](./static/2.png)
+![示例GIF](./static/3.png)
+![示例GIF](./static/4.png)
+![示例GIF](./static/5.png)
+![示例GIF](./static/6.png)
+![示例GIF](./static/7.png)
+---
+![示例GIF](./static/alacritty_JHlGkYE03N.gif)
 ## 特性
 
 - 🎯 **9 个独立 Skill**：可按需单独使用，也可一键输出完整报告
