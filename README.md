@@ -5,13 +5,14 @@
 ---
 ## 演示
 
-![示例GIF](./static/1.png)
-![示例GIF](./static/2.png)
-![示例GIF](./static/3.png)
-![示例GIF](./static/4.png)
-![示例GIF](./static/5.png)
-![示例GIF](./static/6.png)
-![示例GIF](./static/7.png)
+![示例](./static/1.png)
+![示例](./static/2.png)
+![示例](./static/3.png)
+![示例](./static/4.png)
+![示例](./static/5.png)
+![示例](./static/6.png)
+![示例](./static/7.png)
+
 ---
 ![示例GIF](./static/alacritty_JHlGkYE03N.gif)
 ## 特性
