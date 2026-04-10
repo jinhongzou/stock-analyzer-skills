@@ -5,34 +5,53 @@
 """
 
 import akshare as ak
+from .joblibartifactstore import get_cache
 
 
 def analyze_market_overview() -> dict:
     """
-    获取 A 股整体市场数据
+    获取 A 股整体市场数据（带缓存，24小时有效）
 
     返回:
         {average_pe, date, index_value} 或空 dict（失败时）
     """
+    # 尝试从缓存获取
+    cache = get_cache()
+    cache_key = "market_overview"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         df = ak.stock_market_pe_lg()
         latest = df.iloc[-1]
-        return {
+        result = {
             "average_pe": latest["平均市盈率"],
             "date": latest["日期"],
             "index_value": latest["指数"],
         }
+        cache.set(cache_key, result)
+        return result
     except:
         return {}
 
 
 def analyze_market_trend() -> dict:
     """
-    基于上证指数 MA20/MA50 判断牛熊趋势
+    基于上证指数 MA20/MA50 判断牛熊趋势（带缓存，24小时有效）
 
     返回:
         {latest_date, latest_close, ma20, ma50, trend, signal}
     """
+    # 尝试从缓存获取
+    cache = get_cache()
+    cache_key = "market_trend"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     df = ak.stock_zh_index_daily(symbol="sh000001")
     df["MA20"] = df["close"].rolling(window=20).mean()
     df["MA50"] = df["close"].rolling(window=50).mean()
@@ -49,7 +68,7 @@ def analyze_market_trend() -> dict:
         trend = "熊市"
         signal = "短期趋势弱于长期趋势"
 
-    return {
+    result = {
         "latest_date": latest_date,
         "latest_close": latest_close,
         "ma20": latest_ma20,
@@ -57,3 +76,7 @@ def analyze_market_trend() -> dict:
         "trend": trend,
         "signal": signal,
     }
+
+    # 缓存结果
+    cache.set(cache_key, result)
+    return result

@@ -12,12 +12,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from core import (
     get_stock_profile,
+    analyze_sector,
     calculate_roce_history,
     analyze_financial_health,
     get_historical_data,
     calculate_ma,
     calculate_rsi,
+    calculate_beta,
+    calculate_price_distribution,
+    calculate_buy_strategy,
     analyze_news_risk,
+    analyze_news_with_web,  # 新增网络舆情分析
     get_dividend_history,
     calculate_dividend_metrics,
     calculate_score,
@@ -46,6 +51,9 @@ if __name__ == "__main__":
     market_overview = analyze_market_overview()
     market_trend = analyze_market_trend()
 
+    print("[3/9] 获取行业信息...")
+    sector = analyze_sector(stock)
+
     print("[3/9] 计算 ROCE 历史...")
     roce_data = calculate_roce_history(stock)
 
@@ -56,15 +64,50 @@ if __name__ == "__main__":
     df = get_historical_data(stock)
     ma_result = calculate_ma(df)
     rsi_result = calculate_rsi(df)
+    beta_result = calculate_beta(stock)
+    price_dist = calculate_price_distribution(stock)
+
+    # 买入点策略（带营收增速、PB和行业）
+    eps = float(profile.get("每股收益", 0)) if profile else 0
+    dps = float(profile.get("每股分红", 0)) if profile else 0
+
+    # 从profile获取营收增速（如果有）和PB
+    # 注意：akshare的profile可能包含这些字段
+    revenue_growth = None
+    pb = None
+    try:
+        pb_val = profile.get("市净率")
+        if pb_val:
+            pb = float(pb_val)
+    except:
+        pass
+
+    # 获取行业信息
+    industry = profile.get("行业") if profile else None
+
+    buy_strategy = calculate_buy_strategy(
+        stock,
+        eps=eps,
+        dps=dps,
+        revenue_growth=revenue_growth,
+        pb=pb,
+        industry=industry,
+    )
+
     tech = {
         "ma": ma_result,
         "rsi": rsi_result,
+        "beta": beta_result,
+        "price_distribution": price_dist,
+        "buy_strategy": buy_strategy,
         "date_range": f"{df['日期'].iloc[0]} ~ {df['日期'].iloc[-1]}",
         "trade_days": len(df),
     }
 
-    print("[6/9] 新闻风险评估...")
-    news = analyze_news_risk(stock)
+    print("[6/9] 新闻风险评估（含网络舆情）...")
+    # 使用综合新闻分析（本地 + 网络舆情）
+    stock_name = profile.get("名称", "") if profile else ""
+    news = analyze_news_with_web(stock, stock_name, limit=50)
 
     print("[7/9] 获取分红历史...")
     dividend = get_dividend_history(stock)
@@ -82,6 +125,7 @@ if __name__ == "__main__":
     md_content = generate_report_md(
         stock_code=stock,
         profile=profile,
+        sector=sector,
         market_overview=market_overview,
         market_trend=market_trend,
         roce_data=roce_data,

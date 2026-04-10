@@ -7,6 +7,7 @@ ROCE 计算模块
 import akshare as ak
 import pandas as pd
 import time
+from .joblibartifactstore import get_cache
 
 
 def calculate_roce(
@@ -97,7 +98,7 @@ def calculate_roce_history(
     stock_code: str, start_year: int = 2015, end_year: int = 2025
 ) -> list:
     """
-    计算多年 ROCE 历史
+    计算多年 ROCE 历史（带缓存，168小时=7天有效）
 
     参数:
         stock_code: 股票代码
@@ -107,6 +108,14 @@ def calculate_roce_history(
     返回:
         [{year, roce, net_profit, ebit, capital}, ...]
     """
+    # 尝试从缓存获取
+    cache = get_cache()
+    cache_key = f"roce_history_{stock_code}_{start_year}_{end_year}"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     results = []
     for year in range(end_year, start_year - 1, -1):
         try:
@@ -122,4 +131,7 @@ def calculate_roce_history(
             )
         except:
             continue
+
+    # 缓存结果
+    cache.set(cache_key, results)
     return results
