@@ -7,8 +7,6 @@
 import akshare as ak
 import pandas as pd
 
-
-# ========== 国家队识别关键词 ==========
 # 仅限真正的"国家队"：中央级资金
 NATIONAL_TEAM_KEYWORDS = [
     "中央汇金",
@@ -76,7 +74,7 @@ def _classify_shareholder(name: str) -> str:
 
 def get_top_circulating_holders(stock_code: str) -> dict:
     """
-    获取十大流通股东（最新一期）
+    获取十大流通股东（最新一期，带缓存，168小时=7天有效）
 
     返回:
         {
@@ -90,9 +88,25 @@ def get_top_circulating_holders(stock_code: str) -> dict:
             summary: {国家队持股占比, 机构持股占比, ...}
         }
     """
+    # 使用 joblibartifactstore 的 get_cache 避免循环导入
+    from .joblibartifactstore import get_cache
+
+    cache = get_cache()
+    cache_key = f"top_holders_{stock_code}"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     df = ak.stock_circulate_stock_holder(symbol=stock_code)
     if df.empty:
-        return {"date": None, "holders": [], "summary": {}}
+        result = {"date": None, "holders": [], "summary": {}}
+        # 即使空结果也缓存
+        try:
+            cache.set(cache_key, result)
+        except:
+            pass
+        return result
 
     latest_date = df["截止日期"].max()
     latest = df[df["截止日期"] == latest_date].copy()
@@ -134,7 +148,7 @@ def get_top_circulating_holders(stock_code: str) -> dict:
     state_pct = sum(h["占流通股比例"] for h in state_owned)
     hk_pct = sum(h["占流通股比例"] for h in hk_connect)
 
-    return {
+    result = {
         "date": str(latest_date),
         "holders": holders,
         "national_team": national_team,
@@ -150,10 +164,18 @@ def get_top_circulating_holders(stock_code: str) -> dict:
         },
     }
 
+    # 缓存结果
+    try:
+        cache.set(cache_key, result)
+    except Exception as e:
+        print(f"[DEBUG] Cache failed: {e}")
+
+    return result
+
 
 def get_holder_changes(stock_code: str, periods: int = 5) -> list:
     """
-    获取股东持股变动情况（对比最近几期）
+    获取股东持股变动情况（对比最近几期，带缓存，168小时=7天有效）
 
     返回:
         [{
@@ -162,6 +184,16 @@ def get_holder_changes(stock_code: str, periods: int = 5) -> list:
             变动记录: [{日期, 持股数量, 占流通股比例, 变动数量, 变动比例, 变动方向}, ...]
         }, ...]
     """
+    from .joblibartifactstore import get_cache
+
+    cache = get_cache()
+    cache_key = f"holder_changes_{stock_code}_{periods}"
+    cache_key = f"holder_changes_{stock_code}_{periods}"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     df = ak.stock_circulate_stock_holder(symbol=stock_code)
     if df.empty:
         return []
@@ -226,16 +258,32 @@ def get_holder_changes(stock_code: str, periods: int = 5) -> list:
         key=lambda x: x["变动记录"][-1]["持股数量"],
         reverse=True,
     )
+
+    # 缓存结果
+    try:
+        cache.set(cache_key, result)
+    except:
+        pass
+
     return result
 
 
 def detect_selling_risk(stock_code: str, periods: int = 5) -> list:
     """
-    检测股东抛售风险
+    检测股东抛售风险（带缓存，168小时=7天有效）
 
     返回:
         [{股东名称, 类型, 连续减持期数, 减持总数量, 减持总比例, 风险等级}, ...]
     """
+    from .joblibartifactstore import get_cache
+
+    cache = get_cache()
+    cache_key = f"selling_risk_{stock_code}_{periods}"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     df = ak.stock_circulate_stock_holder(symbol=stock_code)
     if df.empty:
         return []
@@ -312,4 +360,11 @@ def detect_selling_risk(stock_code: str, periods: int = 5) -> list:
     # 按风险等级排序
     risk_order = {"高": 0, "中": 1, "低": 2}
     alerts.sort(key=lambda x: (risk_order.get(x["风险等级"], 3), -x["减持总数量"]))
+
+    # 缓存结果
+    try:
+        cache.set(cache_key, alerts)
+    except:
+        pass
+
     return alerts

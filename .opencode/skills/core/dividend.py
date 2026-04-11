@@ -6,15 +6,24 @@
 
 import akshare as ak
 import pandas as pd
+from .joblibartifactstore import get_cache
 
 
 def get_dividend_history(stock_code: str) -> pd.DataFrame:
     """
-    获取历年分红数据
+    获取历年分红数据（带缓存，168小时=7天有效）
 
     返回:
         DataFrame with columns: 年份, 每股分红, 股息率, 送转比例, 每股收益, 每股净资产
     """
+    # 尝试从缓存获取
+    cache = get_cache()
+    cache_key = f"dividend_history_{stock_code}"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         df = ak.stock_fhps_detail_em(symbol=stock_code)
         df["年份"] = pd.to_datetime(df["报告期"]).dt.year
@@ -37,6 +46,9 @@ def get_dividend_history(stock_code: str) -> pd.DataFrame:
             "每股净资产",
         ]
         result = result.sort_values("年份", ascending=False).head(10)
+
+        # 缓存结果
+        cache.set(cache_key, result)
         return result
     except:
         return pd.DataFrame()
@@ -44,13 +56,21 @@ def get_dividend_history(stock_code: str) -> pd.DataFrame:
 
 def calculate_dividend_metrics(stock_code: str, profile: dict) -> dict:
     """
-    计算分红相关指标：
+    计算分红相关指标（带缓存，168小时=7天有效）：
     1. 股息率 = (每股年度分红 ÷ 当前股价) × 100%
        注：akshare的"现金分红-现金分红比例"单位是"每10股派X元"，需÷10
     2. 股利支付率 = (年度分红总额 ÷ 年度净利润) × 100%
        = 每股分红 ÷ 每股收益 × 100%
     3. 派现融资比 = (上市以来累计分红总额 ÷ 上市以来累计融资总额) × 100%
     """
+    # 尝试从缓存获取
+    cache = get_cache()
+    cache_key = f"dividend_metrics_{stock_code}"
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     result = {
         "股息率": None,
         "股息率解读": None,
@@ -162,4 +182,6 @@ def calculate_dividend_metrics(stock_code: str, profile: dict) -> dict:
     except Exception as e:
         pass
 
+    # 缓存结果
+    cache.set(cache_key, result)
     return result

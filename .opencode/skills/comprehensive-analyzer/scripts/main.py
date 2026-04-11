@@ -18,6 +18,9 @@ from core import (
     get_historical_data,
     calculate_ma,
     calculate_rsi,
+    calculate_beta,
+    calculate_price_distribution,
+    calculate_buy_strategy,
     analyze_news_risk,
     get_dividend_history,
     calculate_dividend_metrics,
@@ -64,9 +67,20 @@ if __name__ == "__main__":
     df = get_historical_data(stock)
     ma_result = calculate_ma(df)
     rsi_result = calculate_rsi(df)
+    beta_result = calculate_beta(stock)
+    price_dist = calculate_price_distribution(stock)
+
+    # 买入点策略
+    eps = float(profile.get("每股收益", 0)) if profile else 0
+    dps = float(profile.get("每股分红", 0)) if profile else 0
+    buy_strategy = calculate_buy_strategy(stock, eps=eps, dps=dps)
+
     tech = {
         "ma": ma_result,
         "rsi": rsi_result,
+        "beta": beta_result,
+        "price_distribution": price_dist,
+        "buy_strategy": buy_strategy,
         "date_range": f"{df['日期'].iloc[0]} ~ {df['日期'].iloc[-1]}",
         "trade_days": len(df),
     }
@@ -155,6 +169,31 @@ if __name__ == "__main__":
     rsi = tech.get("rsi", {})
     if rsi.get("rsi") is not None:
         print(f"  RSI(14): {rsi['rsi']:.2f}  ({rsi['signal']})")
+
+    # 52周价格分布
+    pd = tech.get("price_distribution", {})
+    if pd.get("high_52w"):
+        print(f"\n  --- 52周价格分布 ---")
+        print(f"  52周高点: {pd.get('high_52w')}")
+        print(f"  52周低点: {pd.get('low_52w')}")
+        print(f"  中位数: {pd.get('median')}")
+        print(f"  Q1(25%): {pd.get('q1')}")
+        print(f"  当前位置: {pd.get('position_pct')}%")
+
+    # 买入点策略
+    bs = tech.get("buy_strategy", {})
+    if bs.get("final_strategy"):
+        final = bs["final_strategy"]
+        print(f"\n  --- 买入点策略 ---")
+        print(f"  推荐: {final.get('recommendation')}")
+        print(f"  原因: {final.get('reason')}")
+
+        strat = final.get("strategy", {})
+        if strat.get("综合"):
+            print(f"\n  综合价格(多维交叉):")
+            for k, v in strat["综合"].items():
+                print(f"    {k}: {v}元")
+
     print(f"  数据: {tech.get('date_range', '')} ({tech.get('trade_days', 0)} 交易日)")
 
     print_section("七、新闻风险")
