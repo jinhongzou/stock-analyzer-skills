@@ -4,7 +4,7 @@
 
 A股股票分析 Skill 集，基于 akshare 数据源的 Python 多维度分析工具。
 - 接口文件：AKshare接口说明.md
-- 估值框架：参考"龙虾的股票分析"SKILL.md 和 valuation-framework.md
+
 
 ## 目录结构
 
