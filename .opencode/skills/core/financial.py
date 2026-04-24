@@ -6,7 +6,6 @@
 
 import akshare as ak
 import pandas as pd
-from .joblibartifactstore import get_cache
 
 
 def safe_get_col(df: pd.DataFrame, keyword: str) -> str:
@@ -36,7 +35,7 @@ def get_financial_data(stock_code: str) -> dict:
 
 def analyze_financial_health(stock_code: str) -> dict:
     """
-    分析财务健康指标（带缓存，24小时有效）
+    分析财务健康指标
 
     返回:
         {
@@ -45,14 +44,6 @@ def analyze_financial_health(stock_code: str) -> dict:
             cash_flow: [{date, ocf, fcf}, ...],
         }
     """
-    # 尝试从缓存获取
-    cache = get_cache()
-    cache_key = f"financial_health_{stock_code}"
-
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-
     result = {"ratios": [], "cash_flow": [], "interest_coverage": []}
 
     data = get_financial_data(stock_code)
@@ -117,6 +108,4 @@ def analyze_financial_health(stock_code: str) -> dict:
             }
         )
 
-    # 缓存结果
-    cache.set(cache_key, result)
     return result

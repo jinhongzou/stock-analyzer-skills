@@ -1,131 +1,152 @@
-# AGENTS.md
+# AGENTS.md - Stock Analyzer Skills
 
-## 仓库概述
+## Repository Overview
 
-A股股票分析 Skill 集，基于 akshare 数据源的 Python 多维度分析工具。
-- 接口文件：AKshare接口说明.md
+A股股票分析 OpenCode Skills 集合，基于 akshare 数据源。包含 11+ 个独立 Skill，可单独使用也可组合输出完整报告。
 
+## Key Entry Points
 
-## 目录结构
-
+### Skill 调用方式
 ```
-stock-analyzer-skills/
-├── .opencode/skills/
-│   ├── core/                  # 核心逻辑层（所有 Skill 共享）
-│   │   ├── __init__.py
-│   │   ├── roce.py            # ROCE 计算
-│   │   ├── financial.py       # 财务健康
-│   │   ├── technical.py       # 技术分析（含 Beta、52周价格分布、买入点策略）
-│   │   ├── stock.py           # 个股估值
-│   │   ├── market.py          # 市场分析
-│   │   ├── news.py            # 新闻风险
-│   │   ├── dividend.py        # 分红历史
-│   │   ├── a_dividend.py     # A股分红配送
-│   │   ├── scorer.py          # 综合评分
-│   │   ├── report.py          # 报告导出
-│   │   ├── shareholder.py     # 股东分析
-│   │   └── joblibartifactstore.py  # 缓存模块
-│   ├── comprehensive-analyzer/scripts/main.py   # 综合分析入口
-│   ├── report-exporter/scripts/main.py        # 报告导出（推荐）
-│   ├── technical-analyzer/scripts/main.py
-│   └── ...
-├── README.md
-├── 龙虾的股票分析-SKILL.md    # 买入点分析框架
-└── valuation-framework.md    # 估值锚点法详细说明
+skill(name="comprehensive-analyzer")  # 综合分析，推荐
+skill(name="stock-analyzer")         # 个股估值
+skill(name="financial-health")       # 财务健康
+skill(name="technical-analyzer")     # 技术分析
+skill(name="news-risk-analyzer")     # 新闻风险
+skill(name="a-dividend-analyzer")   # 分红配送
+skill(name="roce-calculator")       # ROCE 计算
+skill(name="market-analyzer")       # 市场分析
+skill(name="shareholder-analyzer")  # 股东分析
+skill(name="report-exporter")        # 分析框架
+skill(name="stock-report-builder")  # 报告生成
+skill(name="pdf-converter")        # PDF 转换
+skill(name="email-sender")         # 邮件发送
+skill(name="akshare-docs")        # AKshare API 文档查询
 ```
 
-## 运行命令
-
+### 命令行运行方式
 ```bash
-# 综合分析（输出到终端）
+# 综合分析（推荐）
 python .opencode/skills/comprehensive-analyzer/scripts/main.py 600519
 
-# 报告导出（生成 Markdown 文件，推荐）
-python .opencode/skills/report-exporter/scripts/main.py 600519
+# 单独使用
+python .opencode/skills/stock-analyzer/scripts/main.py 600519
+python .opencode/skills/financial-health/scripts/main.py 600519
+python .opencode/skills/market-analyzer/scripts/main.py
+python .opencode/skills/news-risk-analyzer/scripts/main.py 600519 20
+python .opencode/skills/a-dividend-analyzer/scripts/main.py 600519
 ```
 
-## 依赖
+## Architecture
 
+### 目录结构
+```
+.opencode/skills/
+├── core/                    # 核心逻辑层（所有 skill 共享）
+│   ├── __init__.py         # 统一导出
+│   ├── roce.py            # ROCE 计算
+│   ├── financial.py       # 财务健康
+│   ├── technical.py       # 技术分析
+│   ├── stock.py          # 个股估值
+│   ├── market.py         # 市场分析
+│   ├── news.py           # 新闻风险
+│   ├── dividend.py       # 分红历史
+│   ├── a_dividend.py    # A股分红配送
+│   ├── scorer.py         # 综合评分
+│   ├── report.py        # 报告导出
+│   └── shareholder.py  # 股东分析
+├── [skill-name]/          # 各 Skill 目录
+│   ├── SKILL.md         # Skill 定义
+│   └── scripts/main.py # 入口脚本
+```
+
+### 架构原则
+- `core/`：数据获取 + 计算逻辑，返回结构化数据（dict/DataFrame），不含格式化输出
+- `scripts/main.py`：参数解析 + 格式化输出，薄封装层（`from core import *`）
+- `comprehensive-analyzer`：组合编排，不重复计算代码
+
+## Important Constraints
+
+### 已知问题
+1. **东方财富接口不稳定**：`stock_zh_a_spot_em()` 和 `stock_zh_a_hist()` 经常超时，优先使用新浪和雪球数据源
+2. **网络请求**：所有数据来自在线接口，需要网络连接，部分接口有频率限制，建议调用间隔 >3 秒
+3. **ROCE 计算慢**：需要逐年获取财务报表（每年 2 张表），10 年数据需要 20+ 次网络请求
+
+### 数据源优先级
+- 雪球（实时行情）：`stock_individual_spot_xq()`
+- 新浪财经（财务报表/K线）：`stock_financial_report_sina()`, `stock_zh_a_daily()`
+- 东方财富（新闻/分红）：`stock_news_em()`, `stock_fhps_detail_em()`
+- 乐咕（市场PE）：`stock_market_pe_lg()`
+
+### A股代码规则
+- 沪市：6 开头（如 600519）
+- 深市：0 开头（如 000001）
+- 创业板：3 开头（如 300001）
+- 科创板：688 开头（如 688001）
+
+## Skills 详细说明
+
+### 常用 Skill 输入参数
+| Skill | 输入 | 说明 |
+|-------|------|------|
+| comprehensive-analyzer | 股票代码 | 一键输出完整报告 |
+| stock-analyzer | 股票代码 | PE/PB/股息率 |
+| financial-health | 股票代码 | 流动比率/速动比率/负债率 |
+| technical-analyzer | 股票代码 | MA50/MA200 金叉死叉 |
+| news-risk-analyzer | 股票代码 [新闻条数] | 风险评估 |
+| a-dividend-analyzer | 股票代码 | 分红配送详情 |
+| roce-calculator | 股票代码 | 近 10 年 ROCE |
+| market-analyzer | 无 | 市场整体状况 |
+| shareholder-analyzer | 股票代码 | 十大流通股东 |
+| stock-report-builder | 股票代码 | 完整投资报告（10章节） |
+| report-exporter | 股票代码 | 分析框架（维度/指标/评分） |
+| pdf-converter | PDF 路径 | 转 Markdown |
+| email-sender | 收件人/标题/内容 | 发送邮件 |
+
+### 综合评分体系（5 维度，各 20 分）
+- 盈利能力（ROCE 绝对值 + 趋势）
+- 财务安全（流动比率 + 资产负债率）
+- 估值合理性（PE 水平）
+- 技术面（MA 均线信号 + RSI）
+- 新闻风险（诚信风险关键词）
+
+## Setup
+
+### 依赖安装
 ```bash
-pip install akshare pandas joblib
+pip install akshare pandas
 ```
 
-## 核心功能
+### Skill 注册方式
+```bash
+# 方式 1：全局安装
+mklink /D "%USERPROFILE%\.config\opencode\skills\stock-analyzer" "D:\github_rep\skills_rep\stock-analyzer-skills v1.01"
 
-### 1. 多维估值体系（基于龙虾估值框架）
-
-| 维度 | 适用场景 | 方法 |
-|------|----------|------|
-| 52周价格分布 | 所有股票 | 计算高/低/中位数/Q1/Q3 |
-| PE 估值 | 正常股票 | EPS × 行业PE区间 |
-| PEG 估值 | 成长股（营收增速>20%） | PE/增速 < 1 为低估 |
-| PB 估值 | 周期股（PB<1） | PB < 1 为低估 |
-| 股息率锚定 | 高分红股票 | DPS/目标股息率 |
-
-### 2. 买入点策略
-
-- **激进**：52周 Q1 ~ 中位数
-- **稳健**：偏低1/4区间（推荐）
-- **理想**：接近52周低点
-
-特殊情况自动切换：
-- 成长股 → PEG 估值
-- 周期股/低估 → PB 估值
-- 亏损股/新股 → 52周价格分布
-
-### 3. 技术指标
-
-- MA50/MA200 金叉死叉
-- RSI(14) 超买超卖
-- Beta（相对沪深300）
-- 52周价格分布
-
-## 缓存机制
-
-缓存目录：`.cache/stock_analyzer/`
-
-| 数据类型 | 缓存时间 |
-|----------|----------|
-| 个股基本信息 | 24h |
-| ROCE 历史 | 7d |
-| 财务健康 | 24h |
-| 历史行情 | 24h |
-| 新闻风险 | 6h |
-| 分红历史 | 7d |
-| 股东结构 | 7d |
-| 52周价格分布 | 24h |
-| 买入点策略 | 24h |
-
-**清空缓存**：
-```python
-from core import get_cache
-get_cache().clear()
+# 方式 2：项目级（复制 .opencode 目录）
+cp -r .opencode /path/to/target-project/
 ```
 
-## 已知问题
+## Common Issues
 
-1. **网络请求慢**：ROCE 计算需要 20 次网络请求（约 10 年数据）
-2. **数据源超时**：东方财富接口不稳定，优先使用新浪/雪球
-3. **中文列名**：使用 `safe_get_col()` 模糊匹配
-4. **年报 only**：ROCE 仅取年报（12月31日）
-5. **新闻过滤**："板块"/"概念股"/"主力资金" 不参与风险评估
+| 错误 | 原因 | 解决方案 |
+|------|------|---------|
+| ModuleNotFoundError: core | 路径问题 | main.py 通过 `sys.path.insert(0, ...)` 自动添加，确保从正确目录运行 |
+| Expecting value: line 1 | 数据源超时 | 新浪接口偶尔异常，稍后重试 |
+| ROCE 计算很慢 | 网络请求多 | 正常现象，耐心等待 |
 
-## 添加新函数步骤
+## 注意事项
 
-1. 在 `core/` 下编写函数（返回 dict/DataFrame，不含格式化输出）
-2. 在 `core/__init__.py` 中导出
-3. 在 `scripts/main.py` 中调用并格式化输出
-4. 如需缓存：```python
-from core import get_cache
-cache = get_cache()
-# cache.get(key) / cache.set(key, value)
-```
+1. 每次分析都是实时网络请求，无缓存
+2. 报告末尾必须包含免责声明
+3. 买入建议需展示推导过程，不能只给结论
+4. 网络请求间隔建议 >3 秒避免被封
 
-## 报告模板（Markdown）
+## 何时使用 akshare-docs skill
 
-报告包含 10+ 章节，末尾有：
-- 综合评分（A-E级）
-- 投资建议
-- 风险提示
-- **透明化说明**（估值方法说明）
-- 免责声明
+当需要以下信息时调用此 skill：
+- 查找特定 akshare 函数的用法、参数、返回值
+- 需要实现某个数据获取功能但不确定用哪个接口
+- 了解某个数据源的输入输出格式
+- 查看接口示例代码
+
+搜索关键词可以是：接口名（如 `stock_zh_a_spot`）、功能（如 `历史K线`）、数据源（如 `新浪财经`）
