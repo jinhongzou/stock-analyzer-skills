@@ -9,7 +9,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from core import get_historical_data, calculate_ma, calculate_rsi, calculate_beta
+from core import get_historical_data, calculate_ma, calculate_rsi
 
 
 if __name__ == "__main__":
@@ -45,22 +45,10 @@ if __name__ == "__main__":
             print(f"  RSI:   {rsi_result['rsi']:.2f}")
         print(f"  信号:  {rsi_result['signal']}")
 
-        # 计算 Beta
-        print(f"\n--- Beta (相对沪深300) ---")
-        beta_result = calculate_beta(stock)
-        if beta_result["beta"] is not None:
-            print(f"  Beta:  {beta_result['beta']:.4f}")
-            print(f"  交易日: {beta_result['trading_days']}")
-            print(f"  区间:  {beta_result['date_range']}")
-            print(f"  解读:  {beta_result['interpretation']}")
-        else:
-            print(f"  {beta_result['interpretation']}")
-
         print("\n" + "=" * 60)
         print("参考标准:")
         print("  均线: Bullish(金叉) = MA50 > MA200 | Bearish(死叉) = MA50 < MA200")
         print("  RSI:  >70 超买 | <30 超卖 | 30-70 中性")
-        print("  Beta: >1.2 高波动 | 0.8-1.2 同步 | <0.8 低波动")
         print("=" * 60)
 
     except Exception as e:
