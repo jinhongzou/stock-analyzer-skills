@@ -22,8 +22,9 @@
 | ROCE趋势 | 新浪财经 | `roce-calculator` |
 | 分红历史 | 东方财富 | `a-dividend-analyzer` |
 | 市场环境 | 乐咕/新浪 | `market-analyzer` |
+| **历史分位数** | 新浪财经 | `**percentile-analyzer**` |
 
-**Skill**: stock-analyzer, financial-health, technical-analyzer, news-risk-analyzer, shareholder-analyzer, roce-calculator, a-dividend-analyzer, market-analyzer
+**Skill**: stock-analyzer, financial-health, technical-analyzer, news-risk-analyzer, shareholder-analyzer, roce-calculator, a-dividend-analyzer, market-analyzer, **percentile-analyzer**
 
 ---
 
@@ -79,6 +80,42 @@
 - 牛熊判断：牛市/熊市
 
 **Skill**: market-analyzer, stock-analyzer
+
+---
+
+### 步骤5.1：历史分位数分析（新增）
+
+- 计算近3月/1年/3年/5年价格分位数
+- 生成各周期分位数对比表
+- 输出操作建议
+
+**分位数数据获取**：
+
+```python
+import akshare as ak
+import pandas as pd
+from datetime import datetime, timedelta
+
+# 获取数据
+df = ak.stock_zh_a_daily(symbol='sh600338', adjust='qfq')
+df['date'] = pd.to_datetime(df['date'])
+df = df.sort_values('date').set_index('date')
+
+# 计算分位数
+def calc_percentile(data, current_value):
+    return (data <= current_value).sum() / len(data) * 100
+
+# 分析各周期
+periods = {'3月': 90, '1年': 365, '3年': 1095, '5年': 1825}
+for name, days in periods.items():
+    start_date = datetime.now() - timedelta(days=days)
+    period_df = df[df.index >= start_date]
+    current = period_df['close'].iloc[-1]
+    pct = calc_percentile(period_df['close'], current)
+    print(f"{name}: {current:.2f}元, 分位: {pct:.1f}%")
+```
+
+**Skill**: percentile-analyzer, akshare-docs
 
 ---
 

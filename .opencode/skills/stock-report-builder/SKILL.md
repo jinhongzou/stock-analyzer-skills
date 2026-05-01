@@ -26,10 +26,63 @@
 ## 📚 文档引用说明
 
 | 引用文档 | 用途 | 关键内容 |
-|---------|------|---------|
-| `investment-report-template.md` | 📄 报告输出标准 | 10章结构、表格格式、`{{占位符}}`规范、评分维度、免责声明 |
+|---------|------|----------|
+| `investment-report-template.md` | 📄 报告输出标准 | 10章结构、表格格式、`{{占位符}}`规范、评分维度、**分位数分析**、免责声明 |
 | `report-generation-guide.md` | 🔄 执行流程标准 | 9步工作流、Skill映射表、数据源清单、验证规则、可选步骤 |
 | `akshare-docs` | 🛠️ 首选数据工具 | 行情/财务/股东/分红/宏观等全品类数据接口（https://akshare.akfamily.xyz） |
+| `percentile-analyzer` | 📊 分位数分析 | 近3月/1年/3年/5年价格分位数计算 |
+
+---
+
+## 📊 分位数分析集成（新增）
+
+### 2.3 历史分位数分析
+
+在报告模板第二章"近期行情分析"中新增 **2.3 历史分位数分析** 章节：
+
+#### 包含内容
+
+1. **各周期分位数概览** - 3月/1年/3年/5年四个周期的价格分位数
+2. **价格分位数明细** - 10%-90%各分位价格对比表
+3. **操作建议** - 基于分位数的买入/卖出建议
+4. **分析结论** - 综合研判
+
+#### 分位数计算方法
+
+```python
+import akshare as ak
+import pandas as pd
+from datetime import datetime, timedelta
+
+# 获取数据
+df = ak.stock_zh_a_daily(symbol='sh600338', adjust='qfq')
+df['date'] = pd.to_datetime(df['date'])
+df = df.sort_values('date').set_index('date')
+
+# 计算分位数
+def calc_percentile(data, current_value):
+    return (data <= current_value).sum() / len(data) * 100
+
+# 分析各周期
+periods = {'3月': 90, '1年': 365, '3年': 1095, '5年': 1825}
+for name, days in periods.items():
+    start_date = datetime.now() - timedelta(days=days)
+    period_df = df[df.index >= start_date]
+    current = period_df['close'].iloc[-1]
+    pct = calc_percentile(period_df['close'], current)
+    print(f"{name}: {current:.2f}元, 分位: {pct:.1f}%")
+```
+
+#### 分位数参考标准
+
+| 分位 | 信号 | 操作建议 |
+|------|------|----------|
+| < 10% | 🟢 极低 | 强烈买入信号 |
+| 10-30% | 🟢 低 | 买入信号 |
+| 30-50% | 🟡 偏低 | 可分批建仓 |
+| 50-70% | 🟡 合理 | 观望或持有 |
+| 70-90% | 🟠 偏高 | 考虑减仓 |
+| > 90% | 🔴 极高 | 减仓/止损，不追高 |
 
 ---
 
