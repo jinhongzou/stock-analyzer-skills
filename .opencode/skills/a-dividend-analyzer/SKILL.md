@@ -1,6 +1,6 @@
 ---
 name: a-dividend-analyzer
-description: 获取A股历年分红配送详情（送转/现金分红/股息率/股权登记日/除权除息日）
+description: 分红配送分析。获取A股历年分红配送详情（送转/现金分红/股息率/股权登记日/除权除息日），分析分红连续性和价值
 ---
 
 # A股分红配送分析
@@ -19,15 +19,15 @@ skill(name="a-dividend-analyzer")
 
 **命令行运行**:
 ```bash
-python .opencode/skills/a-dividend-analyzer/scripts/main.py <A股代码>
+python .opencode/skills/core/src/skills/a-dividend-analyzer/main.py <A股代码>
 ```
 
 ### 示例
 
 ```bash
-python .opencode/skills/a-dividend-analyzer/scripts/main.py 600519   # 贵州茅台
-python .opencode/skills/a-dividend-analyzer/scripts/main.py 000858   # 五粮液
-python .opencode/skills/a-dividend-analyzer/scripts/main.py 300073   # 当升科技
+python .opencode/skills/core/src/skills/a-dividend-analyzer/main.py 600519   # 贵州茅台
+python .opencode/skills/core/src/skills/a-dividend-analyzer/main.py 000858   # 五粮液
+python .opencode/skills/core/src/skills/a-dividend-analyzer/main.py 300073   # 当升科技
 ```
 
 ---

@@ -2,78 +2,121 @@
 
 ## Repository Overview
 
-A股股票分析 OpenCode Skills 集合，基于 akshare 数据源。包含 11+ 个独立 Skill，可单独使用也可组合输出完整报告。
+A股股票分析 OpenCode Skills 集合，基于 akshare 数据源。包含 16 个独立 Skill，可单独使用也可组合输出完整报告。
 
 ## Key Entry Points
 
 ### Skill 调用方式
 ```
-skill(name="comprehensive-analyzer")  # 综合分析，推荐
 skill(name="stock-analyzer")         # 个股估值
-skill(name="financial-health")       # 财务健康
 skill(name="technical-analyzer")     # 技术分析
-skill(name="news-risk-analyzer")     # 新闻风险
 skill(name="a-dividend-analyzer")   # 分红配送
 skill(name="roce-calculator")       # ROCE 计算
 skill(name="market-analyzer")       # 市场分析
-skill(name="shareholder-analyzer")  # 股东分析
-skill(name="report-exporter")        # 分析框架
-skill(name="stock-report-builder")  # 报告生成
+skill(name="shareholder-deep")      # 股东深度分析
 skill(name="pdf-converter")        # PDF 转换
 skill(name="email-sender")         # 邮件发送
 skill(name="akshare-docs")        # AKshare API 文档查询
+skill(name="risk-analysis")       # 综合风控（新闻+分位数）
+skill(name="web-search")          # 网络实时搜索
+skill(name="valuation-anchor")    # 估值锚点分析
 ```
 
-### 命令行运行方式
+### 命令行运行方式（全部迁移到 core/src/skills/）
 ```bash
-# 综合分析（推荐）
-python .opencode/skills/comprehensive-analyzer/scripts/main.py 600519
-
-# 单独使用
-python .opencode/skills/stock-analyzer/scripts/main.py 600519
-python .opencode/skills/financial-health/scripts/main.py 600519
-python .opencode/skills/market-analyzer/scripts/main.py
-python .opencode/skills/news-risk-analyzer/scripts/main.py 600519 20
-python .opencode/skills/a-dividend-analyzer/scripts/main.py 600519
+# 单独使用各 Skill
+python .opencode/skills/core/src/skills/stock-analyzer/main.py 600519
+python .opencode/skills/core/src/skills/technical-analyzer/main.py 600519
+python .opencode/skills/core/src/skills/a-dividend-analyzer/main.py 600519
+python .opencode/skills/core/src/skills/roce-calculator/main.py 600519
+python .opencode/skills/core/src/skills/market-analyzer/main.py
+python .opencode/skills/core/src/skills/shareholder-deep/main.py 000651
+python .opencode/skills/core/src/skills/email-sender/main.py "收件人" "主题" "内容"
+python .opencode/skills/core/src/skills/pdf-converter/main.py "file.pdf"
+python .opencode/skills/core/src/skills/akshare-docs/main.py "stock_zh_a_spot"
+python .opencode/skills/core/src/skills/web-search/main.py "查询内容"
+python .opencode/skills/core/src/skills/risk-analysis/main.py 600519
+python .opencode/skills/core/src/skills/valuation-anchor/main.py 600519
 ```
 
 ## Architecture
 
+### 分层架构
+
+| 层级 | 目录 | 职责 |
+|------|------|------|
+| **向后兼容层** | `core/__init__.py` | 26 个包装函数 + 9 个类导出，委托给下层 Analyzer 类 |
+| **分析器层** | `core/src/analyzers/` | 7 个 Analyzer 类，数据获取 + 计算逻辑 |
+| **基础设施层** | `core/src/infra/` | CacheManager + ReportGenerator |
+| **入口层** | `core/src/skills/` | 13 个 skill 的 `main.py`，参数解析 + 格式化输出 |
+
 ### 目录结构
 ```
-.opencode/skills/
-├── core/                    # 核心逻辑层（所有 skill 共享）
-│   ├── __init__.py         # 统一导出
-│   ├── roce.py            # ROCE 计算
-│   ├── financial.py       # 财务健康
-│   ├── technical.py       # 技术分析
-│   ├── stock.py          # 个股估值
-│   ├── market.py         # 市场分析
-│   ├── news.py           # 新闻风险
-│   ├── dividend.py       # 分红历史
-│   ├── a_dividend.py    # A股分红配送
-│   ├── scorer.py         # 综合评分
-│   ├── report.py        # 报告导出
-│   └── shareholder.py  # 股东分析
-├── [skill-name]/          # 各 Skill 目录
-│   ├── SKILL.md         # Skill 定义
-│   └── scripts/main.py # 入口脚本
+stock-analyzer-skills_tushare/           # 项目根目录
+├── .opencode/
+│   └── skills/
+│       ├── core/                        # 向后兼容导出层（委托给 src/）
+│       │   └── __init__.py              #   26 个包装函数 + 类导出
+│       │   └── src/                     # 核心源代码目录
+│       │       ├── __init__.py
+│       │       ├── config/
+│   │       │   └── .env             # ⚠️ 统一配置文件（Tushare Token/SMTP/Tavily API Key）
+│       │       ├── analyzers/           # 分析器层，7 个 Analyzer 类
+│       │       │   ├── __init__.py
+│       │       │   ├── market.py        # MarketAnalyzer（市场分析）
+│       │       │   ├── technical.py     # TechnicalAnalyzer（技术分析）
+│       │       │   ├── news.py          # NewsRiskAnalyzer（新闻风险）
+│       │       │   ├── dividend.py      # DividendAnalyzer（分红配送）
+│       │       │   ├── financial.py     # FinancialAnalyzer（财务健康 + ROCE）
+│       │       │   ├── stock.py         # StockAnalyzer（个股估值 + 估值锚点）
+│       │       │   └── shareholder.py   # ShareholderAnalyzer（股东分析）
+│       │       ├── infra/               # 基础设施层
+│       │       │   ├── __init__.py
+│       │       │   ├── cache.py         # CacheManager（缓存）
+│       │       │   └── report.py        # ReportGenerator（评分 + 报告导出）
+│       │       └── skills/              # 13 个 Skill 入口（薄封装层）
+│       │           ├── stock-analyzer/main.py
+│       │           ├── technical-analyzer/main.py
+│       │           ├── a-dividend-analyzer/main.py
+│       │           ├── roce-calculator/main.py
+│       │           ├── market-analyzer/main.py
+│       │           ├── percentile-analyzer/main.py
+│       │           ├── risk-analysis/main.py
+│       │           ├── shareholder-deep/main.py
+│       │           ├── valuation-anchor/main.py
+│       │           ├── email-sender/main.py
+│       │           ├── pdf-converter/main.py
+│       │           ├── akshare-docs/main.py
+│       │           └── web-search/main.py
+│       └── [skill-name]/             # 各 Skill 目录（SKILL.md + 旧入口）
+│           ├── SKILL.md
+│           └── scripts/              # 已迁移到 core/src/skills/
+├── output/                            # 生成的分析报告（与 .opencode 同级）
+├── AGENTS.md
+├── README.md
+└── 代码规范.txt
 ```
 
 ### 架构原则
-- `core/`：数据获取 + 计算逻辑，返回结构化数据（dict/DataFrame），不含格式化输出
-- `scripts/main.py`：参数解析 + 格式化输出，薄封装层（`from core import *`）
-- `comprehensive-analyzer`：组合编排，不重复计算代码
-
+- **`core/src/analyzers/`**：数据获取 + 计算逻辑，返回结构化数据（dict/DataFrame），不含输出格式
+- **`core/src/infra/`**：基础设施（缓存管理、报告生成与评分）
+- **`core/src/skills/[name]/main.py`**：参数解析 + 格式化输出，薄封装层（`from core import ...`）
+- **`core/__init__.py`**：向后兼容导出，内部委托给 `src/` 下的类，旧代码无需修改
 ## Important Constraints
 
+### 行为守则（所有 Skill 通用）
+
+1. **不确定性必须提问**：遇到模糊需求、缺少参数、多种可能选项时，必须向用户提问澄清，不得替用户做决定
+2. **不擅自假设**：不要假设用户意图，必须用问题确认
+3. **不擅自执行**：输出报告前先展示关键发现，让用户决定下一步
+
 ### 已知问题
-1. **东方财富接口不稳定**：`stock_zh_a_spot_em()` 和 `stock_zh_a_hist()` 经常超时，优先使用新浪和雪球数据源
+1. **东方财富接口不稳定**：`stock_zh_a_spot_em()` 和 `stock_zh_a_hist()` 经常超时，优先使用新浪和 Tushare 数据源
 2. **网络请求**：所有数据来自在线接口，需要网络连接，部分接口有频率限制，建议调用间隔 >3 秒
 3. **ROCE 计算慢**：需要逐年获取财务报表（每年 2 张表），10 年数据需要 20+ 次网络请求
 
 ### 数据源优先级
-- 雪球（实时行情）：`stock_individual_spot_xq()`
+- Tushare Pro（个股估值/行情）：`pro.daily_basic()`, `pro.daily()`, `pro.stock_basic()`, `pro.fina_indicator()`
 - 新浪财经（财务报表/K线）：`stock_financial_report_sina()`, `stock_zh_a_daily()`
 - 东方财富（新闻/分红）：`stock_news_em()`, `stock_fhps_detail_em()`
 - 乐咕（市场PE）：`stock_market_pe_lg()`
@@ -89,25 +132,24 @@ python .opencode/skills/a-dividend-analyzer/scripts/main.py 600519
 ### 常用 Skill 输入参数
 | Skill | 输入 | 说明 |
 |-------|------|------|
-| comprehensive-analyzer | 股票代码 | 一键输出完整报告 |
 | stock-analyzer | 股票代码 | PE/PB/股息率 |
-| financial-health | 股票代码 | 流动比率/速动比率/负债率 |
 | technical-analyzer | 股票代码 | MA50/MA200 金叉死叉 |
-| news-risk-analyzer | 股票代码 [新闻条数] | 风险评估 |
 | a-dividend-analyzer | 股票代码 | 分红配送详情 |
 | roce-calculator | 股票代码 | 近 10 年 ROCE |
 | market-analyzer | 无 | 市场整体状况 |
-| shareholder-analyzer | 股票代码 | 十大流通股东 |
-| stock-report-builder | 股票代码 | 完整投资报告（10章节） |
-| report-exporter | 股票代码 | 分析框架（维度/指标/评分） |
+| shareholder-deep | 股票代码 | 股东深度分析 |
 | pdf-converter | PDF 路径 | 转 Markdown |
 | email-sender | 收件人/标题/内容 | 发送邮件 |
+| risk-analysis | 股票代码 [新闻条数] | 综合风控（新闻风险+分位数） |
+| web-search | 查询内容 | 网络实时检索 |
+| valuation-anchor | 股票代码 | 估值锚点分析 |
 
-### 综合评分体系（5 维度，各 20 分）
-- 盈利能力（ROCE 绝对值 + 趋势）
-- 财务安全（流动比率 + 资产负债率）
+### 综合评分体系（6 维度，各 20 分）
+- 盈利能力：ROCE 绝对值 + 趋势
+- 财务安全：流动比率 + 资产负债率
 - 估值合理性（PE 水平）
 - 技术面（MA 均线信号 + RSI）
+- 业务前景（行业地位 + 增长潜力）
 - 新闻风险（诚信风险关键词）
 
 ## Setup
@@ -116,6 +158,20 @@ python .opencode/skills/a-dividend-analyzer/scripts/main.py 600519
 ```bash
 pip install akshare pandas
 ```
+
+### 配置文件位置
+
+所有API密钥和SMTP配置统一在以下文件中管理：
+
+```
+.opencode/skills/core/src/config/.env
+```
+
+包含以下配置项：
+- `TUSHARE_TOKEN` — Tushare Pro 数据接口令牌
+- `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` — 邮件发送配置
+- `TAVILY_API_KEY` — Web Search 接口密钥
+- `OUTPUT_DIR` — 报告输出目录
 
 ### Skill 注册方式
 ```bash
@@ -128,7 +184,7 @@ cp -r .opencode /path/to/target-project/
 
 ## Common Issues
 
-| 错误 | 原因 | 解决方案 |
+| 错误 | 原因 | 解决方法 |
 |------|------|---------|
 | ModuleNotFoundError: core | 路径问题 | main.py 通过 `sys.path.insert(0, ...)` 自动添加，确保从正确目录运行 |
 | Expecting value: line 1 | 数据源超时 | 新浪接口偶尔异常，稍后重试 |

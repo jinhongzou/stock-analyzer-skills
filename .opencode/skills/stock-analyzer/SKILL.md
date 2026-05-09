@@ -1,6 +1,6 @@
 ---
 name: stock-analyzer
-description: 分析个股行业归属、估值水平（PE/PB/股息率）和买卖建议
+description: 个股估值分析。分析A股个股行业归属、估值水平（PE/PB/股息率/总市值），参考PE和涨跌幅给出买卖建议
 ---
 
 # Stock Analyzer
@@ -19,14 +19,14 @@ skill(name="stock-analyzer")
 
 **命令行运行**:
 ```bash
-python .opencode/skills/stock-analyzer/scripts/main.py <股票代码>
+python .opencode/skills/core/src/skills/stock-analyzer/main.py <股票代码>
 ```
 
 ### 示例
 
 ```bash
-python .opencode/skills/stock-analyzer/scripts/main.py 600519   # 贵州茅台
-python .opencode/skills/stock-analyzer/scripts/main.py 002594   # 比亚迪
+python .opencode/skills/core/src/skills/stock-analyzer/main.py 600519   # 贵州茅台
+python .opencode/skills/core/src/skills/stock-analyzer/main.py 002594   # 比亚迪
 ```
 
 ---
