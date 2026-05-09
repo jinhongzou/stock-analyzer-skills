@@ -1,6 +1,6 @@
 ---
 name: news-risk-analyzer
-description: 获取 A 股个股新闻，AI 逐条进行风险评估（含诚信风险提醒）
+description: 个股新闻风险评估。获取A股个股新闻，AI逐条评估风险等级（高/中/低），检测诚信风险关键词（财务造假/监管处罚等50+关键词）
 ---
 
 # News Risk Analyzer
@@ -19,15 +19,15 @@ skill(name="news-risk-analyzer")
 
 **命令行运行**:
 ```bash
-python .opencode/skills/news-risk-analyzer/scripts/main.py <股票代码> [新闻数量]
+python .opencode/skills/core/src/skills/news-risk-analyzer/main.py <股票代码> [新闻数量]
 ```
 
 ### 示例
 
 ```bash
-python .opencode/skills/news-risk-analyzer/scripts/main.py 600519        # 贵州茅台，默认20条
-python .opencode/skills/news-risk-analyzer/scripts/main.py 600338 10     # 西藏珠峰，10条
-python .opencode/skills/news-risk-analyzer/scripts/main.py 002594 30     # 比亚迪，30条
+python .opencode/skills/core/src/skills/news-risk-analyzer/main.py 600519        # 贵州茅台，默认20条
+python .opencode/skills/core/src/skills/news-risk-analyzer/main.py 600338 10     # 西藏珠峰，10条
+python .opencode/skills/core/src/skills/news-risk-analyzer/main.py 002594 30     # 比亚迪，30条
 ```
 
 ---

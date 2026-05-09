@@ -1,6 +1,6 @@
 ---
 name: roce-calculator
-description: 计算 A 股股票的 ROCE（资本回报率）近10年趋势
+description: ROCE计算。计算A股股票近10年ROCE（资本回报率=EBIT/投入资本），评估盈利能力和趋势
 ---
 
 # ROCE Calculator
@@ -29,15 +29,15 @@ skill(name="roce-calculator")
 
 **命令行运行**:
 ```bash
-python .opencode/skills/roce-calculator/scripts/main.py <股票代码>
+python .opencode/skills/core/src/skills/roce-calculator/main.py <股票代码>
 ```
 
 ### 示例
 
 ```bash
-python .opencode/skills/roce-calculator/scripts/main.py 600519   # 贵州茅台
-python .opencode/skills/roce-calculator/scripts/main.py 600338   # 西藏珠峰
-python .opencode/skills/roce-calculator/scripts/main.py 002594   # 比亚迪
+python .opencode/skills/core/src/skills/roce-calculator/main.py 600519   # 贵州茅台
+python .opencode/skills/core/src/skills/roce-calculator/main.py 600338   # 西藏珠峰
+python .opencode/skills/core/src/skills/roce-calculator/main.py 002594   # 比亚迪
 ```
 
 ---

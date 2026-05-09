@@ -1,6 +1,6 @@
 ---
 name: technical-analyzer
-description: 股票技术分析（MA50/MA200 金叉死叉/RSI 超买超卖）
+description: 技术分析。A股技术分析：MA50/MA200均线金叉死叉信号，RSI(14)超买超卖判断
 ---
 
 # Technical Analyzer
@@ -19,14 +19,14 @@ skill(name="technical-analyzer")
 
 **命令行运行**:
 ```bash
-python .opencode/skills/technical-analyzer/scripts/main.py <股票代码>
+python .opencode/skills/core/src/skills/technical-analyzer/main.py <股票代码>
 ```
 
 ### 示例
 
 ```bash
-python .opencode/skills/technical-analyzer/scripts/main.py 600519   # 贵州茅台
-python .opencode/skills/technical-analyzer/scripts/main.py 002594   # 比亚迪
+python .opencode/skills/core/src/skills/technical-analyzer/main.py 600519   # 贵州茅台
+python .opencode/skills/core/src/skills/technical-analyzer/main.py 002594   # 比亚迪
 ```
 
 ---

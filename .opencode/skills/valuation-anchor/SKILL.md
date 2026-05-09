@@ -1,3 +1,8 @@
+---
+name: valuation-anchor
+description: 估值锚点分析：多维度交叉验证的买入点定价框架，结合PE/PB/分位数确定估值区间
+---
+
 # Valuation Anchor Method
 
 **功能**: 估值锚点法 - 多维度交叉验证的买入点定价框架  
@@ -9,14 +14,14 @@
 
 **命令行运行**:
 ```bash
-python .opencode/skills/valuation-anchor/scripts/main.py <股票代码>
+python .opencode/skills/core/src/skills/valuation-anchor/main.py <股票代码>
 ```
 
 ### 示例
 
 ```bash
-python .opencode/skills/valuation-anchor/scripts/main.py 600519   # 贵州茅台
-python .opencode/skills/valuation-anchor/scripts/main.py 000895   # 双汇发展
+python .opencode/skills/core/src/skills/valuation-anchor/main.py 600519   # 贵州茅台
+python .opencode/skills/core/src/skills/valuation-anchor/main.py 000895   # 双汇发展
 ```
 
 ---

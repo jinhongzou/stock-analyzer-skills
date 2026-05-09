@@ -1,6 +1,6 @@
 ---
 name: pdf-converter
-description: 将PDF文件转换为Markdown格式，并校验转换内容的准确性
+description: PDF转换。将PDF文件转换为Markdown格式，保留表格和格式，校验转换内容的准确性
 ---
 
 # PDF Converter
@@ -19,14 +19,14 @@ skill(name="pdf-converter")
 
 **命令行运行**:
 ```bash
-python .opencode/skills/pdf-converter/scripts/main.py <PDF文件路径> [输出目录]
+python .opencode/skills/core/src/skills/pdf-converter/main.py <PDF文件路径> [输出目录]
 ```
 
 ### 示例
 
 ```bash
-python .opencode/skills/pdf-converter/scripts/main.py ./report.pdf ./output/
-python .opencode/skills/pdf-converter/scripts/main.py ./2026Q1.pdf
+python .opencode/skills/core/src/skills/pdf-converter/main.py ./report.pdf ./output/
+python .opencode/skills/core/src/skills/pdf-converter/main.py ./2026Q1.pdf
 ```
 
 ---

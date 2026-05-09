@@ -1,6 +1,6 @@
 ---
 name: market-analyzer
-description: 分析 A 股市场整体状况（平均 PE/PB/总市值/上证指数 MA20/MA50 牛熊判断）
+description: 市场整体分析。分析A股市场整体状况（平均PE/PB/总市值），上证指数MA20/MA50牛熊判断，无需输入股票代码
 ---
 
 # Market Analyzer
@@ -19,7 +19,7 @@ skill(name="market-analyzer")
 
 **命令行运行**:
 ```bash
-python .opencode/skills/market-analyzer/scripts/main.py
+python .opencode/skills/core/src/skills/market-analyzer/main.py
 ```
 
 ---
