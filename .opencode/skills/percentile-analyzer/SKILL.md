@@ -20,18 +20,18 @@ skill(name="percentile-analyzer")
 
 **命令行运行**:
 ```bash
-python .opencode/skills/percentile-analyzer/scripts/main.py <股票代码> [周期]
+python .opencode/skills/core/src/skills/percentile-analyzer/main.py <股票代码> [周期]
 ```
 
 ### 示例
 
 ```bash
 # 全部分析（3月/1年/3年/5年）
-python .opencode/skills/percentile-analyzer/scripts/main.py 600338
+python .opencode/skills/core/src/skills/percentile-analyzer/main.py 600338
 
 # 指定周期分析
-python .opencode/skills/percentile-analyzer/scripts/main.py 600338 1y
-python .opencode/skills/percentile-analyzer/scripts/main.py 600338 5y
+python .opencode/skills/core/src/skills/percentile-analyzer/main.py 600338 1y
+python .opencode/skills/core/src/skills/percentile-analyzer/main.py 600338 5y
 ```
 
 ### 周期参数
