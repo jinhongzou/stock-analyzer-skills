@@ -4,7 +4,7 @@
 
 ## 特点
 
-- 🀆 **12 个独立 Skill**：可按需单独使用，也可一键输出完整投资报告
+- 🀆 **16 个独立 Skill**：可按需单独使用，也可一键输出完整投资报告
 - 🔆 **共享核心架构**：所有 Skill 统一引用 `core/` 核心逻辑层，保证数据一致性与零代码重复
 - 🆓 **6 维评分体系**：盈利能力 / 财务安全 / 估值合理性 / 技术面 / 业务前景 / 新闻风险，满分 120 分
 - 🆗 **多数据源融合**：Tushare Pro（个股估值/行情🔄）、新浪财经（财务报表/K线）、东方财富（新闻/分红）、乐咕（市场PE）
@@ -19,7 +19,7 @@
 |-------|------|------|----------|
 | `stock-analyzer` | 个股估值（PE/PB/股息率/行业分析） | 股票代码 | `StockAnalyzer` |
 | `technical-analyzer` | 技术指标（MA50/MA200 金叉死叉 + RSI14） | 股票代码 | `TechnicalAnalyzer` |
-| `news-risk-analyzer` | 新闻风险评估（诚信风险关键词检测） | 股票代码 | `NewsRiskAnalyzer` |
+| `risk-analysis` | 综合风控（新闻风险+价格分位数分析） | 股票代码 | `NewsRiskAnalyzer` + 分位数计算 |
 | `roce-calculator` | 近 10 年 ROCE（资本回报率）趋势 | 股票代码 | `FinancialAnalyzer` |
 | `a-dividend-analyzer` | A股分红配送（送转/现金分红/股息率/关键日期） | A股代码 | `DividendAnalyzer` |
 | `market-analyzer` | A 股市场整体状况（平均PE/上证指数MA20/MA50） | 无 | `MarketAnalyzer` |
@@ -60,10 +60,11 @@ stock-analyzer-skills_tushare/           # 项目根目录
 │       │       └── skills/              # 13 个 Skill 入口（薄封装层）
 │       │           ├── stock-analyzer/main.py
 │       │           ├── technical-analyzer/main.py
-│       │           ├── news-risk-analyzer/main.py
 │       │           ├── a-dividend-analyzer/main.py
 │       │           ├── roce-calculator/main.py
 │       │           ├── market-analyzer/main.py
+│       │           ├── percentile-analyzer/main.py
+│       │           ├── risk-analysis/main.py
 │       │           ├── shareholder-deep/main.py
 │       │           ├── valuation-anchor/main.py
 │       │           ├── email-sender/main.py
@@ -88,7 +89,7 @@ stock-analyzer-skills_tushare/           # 项目根目录
 | **向后兼容层** | `core/__init__.py` | 26 个包装函数 + 9 个类导出，委托给下层 Analyzer 类 |
 | **分析器层** | `core/src/analyzers/` | 7 个 Analyzer 类，数据获取 + 计算逻辑 |
 | **基础设施层** | `core/src/infra/` | CacheManager + ReportGenerator |
-| **入口层** | `core/src/skills/` | 12 个 skill 的 `main.py`，参数解析 + 格式化输出 |
+| **入口层** | `core/src/skills/` | 13 个 skill 的 `main.py`，参数解析 + 格式化输出 |
 
 ---
 
@@ -162,8 +163,8 @@ skill(name="roce-calculator")
 skill(name="market-analyzer")
 skill(name="stock-analyzer")
 skill(name="technical-analyzer")
-skill(name="news-risk-analyzer")
 skill(name="a-dividend-analyzer")
+skill(name="risk-analysis")
 skill(name="shareholder-deep")
 skill(name="pdf-converter")
 skill(name="akshare-docs")
@@ -175,11 +176,11 @@ skill(name="akshare-docs")
 # 单独使用各 Skill
 python .opencode/skills/core/src/skills/stock-analyzer/main.py 600519
 python .opencode/skills/core/src/skills/technical-analyzer/main.py 600519
-python .opencode/skills/core/src/skills/news-risk-analyzer/main.py 600519 20
 python .opencode/skills/core/src/skills/a-dividend-analyzer/main.py 600519
 python .opencode/skills/core/src/skills/roce-calculator/main.py 600519
 python .opencode/skills/core/src/skills/market-analyzer/main.py
 python .opencode/skills/core/src/skills/shareholder-deep/main.py 000651
+python .opencode/skills/core/src/skills/risk-analysis/main.py 600519
 python .opencode/skills/core/src/skills/valuation-anchor/main.py 600519
 python .opencode/skills/core/src/skills/email-sender/main.py "收件人" "主题" "内容"
 python .opencode/skills/core/src/skills/pdf-converter/main.py "file.pdf"
@@ -266,9 +267,9 @@ EBIT = 净利润 + 利息费用 + 所得税
 - **MA 均线系统**：MA50 / MA200 金叉（Bullish）或死叉（Bearish）
 - **RSI(14)**：>70 超买 | <30 超卖 | 30-70 中性
 
-### news-risk-analyzer
+### risk-analysis
 
-获取个股新闻并进行关键词风险评估。
+综合风控分析，整合新闻风险评估 + 历史分位数分析。
 
 **风险等级**：
 
@@ -278,7 +279,12 @@ EBIT = 净利润 + 利息费用 + 所得税
 | 🟡 中风险 | 业绩下滑、股东减持、行业政策变化、高管辞职等 |
 | 🟢 低风险 | 日常经营、正面新闻等 |
 
-**诚信风险关键词**（50+ 个）：财务造假、虚增利润、虚假记账、财务舞奁、信披违规、证监会调查、行政处罚、内幕交易、操纵股价、退市风险警示等。
+**输出内容**：
+- 新闻风险：高/中/低风险统计，诚信风险关键词检测
+- 价格分位：近3月/1年/3年/5年价格分位，多周期信号对比
+- 综合评分：新闻风险 50% + 价格分位 50%，A-E 评级
+
+**诚信风险关键词**（50+ 个）：财务造假、虚增利润、虚假记载、信披违规、证监会调查、行政处罚、内幕交易、操纵股价、退市风险警示等。
 
 ### a-dividend-analyzer
 
