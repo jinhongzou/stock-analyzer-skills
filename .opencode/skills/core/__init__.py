@@ -61,6 +61,7 @@ def get_output_dir() -> str:
 # 导入新类
 from .src.analyzers import (
     MarketAnalyzer,
+    MarketSystemicRiskAnalyzer,
     TechnicalAnalyzer,
     NewsRiskAnalyzer,
     DividendAnalyzer,

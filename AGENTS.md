@@ -13,6 +13,7 @@ skill(name="technical-analyzer")     # 技术分析
 skill(name="a-dividend-analyzer")   # 分红配送
 skill(name="roce-calculator")       # ROCE 计算
 skill(name="market-analyzer")       # 市场分析
+skill(name="market-systemic-risk")  # 市场系统性风险分析
 skill(name="shareholder-deep")      # 股东深度分析
 skill(name="pdf-converter")        # PDF 转换
 skill(name="email-sender")         # 邮件发送
@@ -30,6 +31,7 @@ python .opencode/skills/core/src/skills/technical-analyzer/main.py 600519
 python .opencode/skills/core/src/skills/a-dividend-analyzer/main.py 600519
 python .opencode/skills/core/src/skills/roce-calculator/main.py 600519
 python .opencode/skills/core/src/skills/market-analyzer/main.py
+python .opencode/skills/core/src/skills/market-systemic-risk/main.py
 python .opencode/skills/core/src/skills/shareholder-deep/main.py 000651
 python .opencode/skills/core/src/skills/email-sender/main.py "收件人" "主题" "内容"
 python .opencode/skills/core/src/skills/pdf-converter/main.py "file.pdf"
@@ -46,9 +48,9 @@ python .opencode/skills/core/src/skills/valuation-anchor/main.py 600519
 | 层级 | 目录 | 职责 |
 |------|------|------|
 | **向后兼容层** | `core/__init__.py` | 26 个包装函数 + 9 个类导出，委托给下层 Analyzer 类 |
-| **分析器层** | `core/src/analyzers/` | 7 个 Analyzer 类，数据获取 + 计算逻辑 |
+| **分析器层** | `core/src/analyzers/` | 8 个 Analyzer 类，数据获取 + 计算逻辑 |
 | **基础设施层** | `core/src/infra/` | CacheManager + ReportGenerator |
-| **入口层** | `core/src/skills/` | 13 个 skill 的 `main.py`，参数解析 + 格式化输出 |
+| **入口层** | `core/src/skills/` | 14 个 skill 的 `main.py`，参数解析 + 格式化输出 |
 
 ### 目录结构
 ```
@@ -61,7 +63,7 @@ stock-analyzer-skills_tushare/           # 项目根目录
 │       │       ├── __init__.py
 │       │       ├── config/
 │   │       │   └── .env             # ⚠️ 统一配置文件（Tushare Token/SMTP/Tavily API Key）
-│       │       ├── analyzers/           # 分析器层，7 个 Analyzer 类
+│       │       ├── analyzers/           # 分析器层，8 个 Analyzer 类
 │       │       │   ├── __init__.py
 │       │       │   ├── market.py        # MarketAnalyzer（市场分析）
 │       │       │   ├── technical.py     # TechnicalAnalyzer（技术分析）
@@ -74,7 +76,7 @@ stock-analyzer-skills_tushare/           # 项目根目录
 │       │       │   ├── __init__.py
 │       │       │   ├── cache.py         # CacheManager（缓存）
 │       │       │   └── report.py        # ReportGenerator（评分 + 报告导出）
-│       │       └── skills/              # 13 个 Skill 入口（薄封装层）
+│       │       └── skills/              # 14 个 Skill 入口（薄封装层）
 │       │           ├── stock-analyzer/main.py
 │       │           ├── technical-analyzer/main.py
 │       │           ├── a-dividend-analyzer/main.py
@@ -87,6 +89,7 @@ stock-analyzer-skills_tushare/           # 项目根目录
 │       │           ├── email-sender/main.py
 │       │           ├── pdf-converter/main.py
 │       │           ├── akshare-docs/main.py
+│       │           ├── market-systemic-risk/main.py
 │       │           └── web-search/main.py
 │       └── [skill-name]/             # 各 Skill 目录（SKILL.md + 旧入口）
 │           ├── SKILL.md
@@ -109,6 +112,12 @@ stock-analyzer-skills_tushare/           # 项目根目录
 1. **不确定性必须提问**：遇到模糊需求、缺少参数、多种可能选项时，必须向用户提问澄清，不得替用户做决定
 2. **不擅自假设**：不要假设用户意图，必须用问题确认
 3. **不擅自执行**：输出报告前先展示关键发现，让用户决定下一步
+4. **代码只提供数据，不做分析判断**：数据采集代码只返回原始数值（或简单计算如同比/分位），所有"预警信号""危险等级""买入/卖出建议"等分析判断由调用方（AI 或人）根据原始数据自行决定。禁止在数据获取层内置分析逻辑。
+
+### 数据源策略
+
+1. **Tushare Pro 优先，akshare 替补**：所有数据优先用 Tushare Pro 获取。若 Tushare 接口不存在、无权限（返回"不正确的接口名"）、或列结构过于复杂（如 PMI 的 65 列编码），则降级使用 akshare 对应接口。
+2. **宏观数据命名**：Tushare Pro 宏观接口名不带 `macro_` 前缀，如 `cn_gdp` / `cn_cpi` / `cn_ppi`。/li>
 
 ### 已知问题
 1. **东方财富接口不稳定**：`stock_zh_a_spot_em()` 和 `stock_zh_a_hist()` 经常超时，优先使用新浪和 Tushare 数据源
@@ -116,7 +125,12 @@ stock-analyzer-skills_tushare/           # 项目根目录
 3. **ROCE 计算慢**：需要逐年获取财务报表（每年 2 张表），10 年数据需要 20+ 次网络请求
 
 ### 数据源优先级
-- Tushare Pro（个股估值/行情）：`pro.daily_basic()`, `pro.daily()`, `pro.stock_basic()`, `pro.fina_indicator()`
+- **Tushare Pro（优先）**：`pro.daily_basic()`, `pro.daily()`, `pro.stock_basic()`, `pro.fina_indicator()`, `pro.cn_gdp()`, `pro.cn_cpi()`, `pro.cn_ppi()`
+
+- **akshare（Tushare 取不到时替补）**：适用于 Tushare 无权限或列结构过于复杂的场景
+  - PMI：`ak.macro_china_pmi()`（5 列简洁结构，替代 Tushare 的 65 列无意义编码）
+  - 失业率：`ak.macro_china_urban_unemployment()`
+  - 货币供应量：`ak.macro_china_money_supply()`
 - 新浪财经（财务报表/K线）：`stock_financial_report_sina()`, `stock_zh_a_daily()`
 - 东方财富（新闻/分红）：`stock_news_em()`, `stock_fhps_detail_em()`
 - 乐咕（市场PE）：`stock_market_pe_lg()`
@@ -137,6 +151,7 @@ stock-analyzer-skills_tushare/           # 项目根目录
 | a-dividend-analyzer | 股票代码 | 分红配送详情 |
 | roce-calculator | 股票代码 | 近 10 年 ROCE |
 | market-analyzer | 无 | 市场整体状况 |
+| market-systemic-risk | 无 | 市场系统性风险分析 |
 | shareholder-deep | 股票代码 | 股东深度分析 |
 | pdf-converter | PDF 路径 | 转 Markdown |
 | email-sender | 收件人/标题/内容 | 发送邮件 |
@@ -144,13 +159,13 @@ stock-analyzer-skills_tushare/           # 项目根目录
 | web-search | 查询内容 | 网络实时检索 |
 | valuation-anchor | 股票代码 | 估值锚点分析 |
 
-### 综合评分体系（6 维度，各 20 分）
-- 盈利能力：ROCE 绝对值 + 趋势
-- 财务安全：流动比率 + 资产负债率
-- 估值合理性（PE 水平）
-- 技术面（MA 均线信号 + RSI）
-- 业务前景（行业地位 + 增长潜力）
-- 新闻风险（诚信风险关键词）
+### 综合评分体系（6 维度，总分 100 分）
+- 盈利能力（20 分）：ROCE 绝对值 + 趋势
+- 财务安全（20 分）：流动比率 + 资产负债率
+- 估值合理性（20 分）：PE 水平
+- 技术面（10 分）：MA 均线信号 + RSI
+- 业务前景（10 分）：行业地位 + 增长潜力
+- 新闻风险（20 分）：诚信风险关键词
 
 ## Setup
 

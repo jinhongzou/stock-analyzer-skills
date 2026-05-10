@@ -4,7 +4,7 @@
 
 ## 特点
 
-- 🀆 **16 个独立 Skill**：可按需单独使用，也可一键输出完整投资报告
+- 🀆 **17 个独立 Skill**：可按需单独使用，也可一键输出完整投资报告
 - 🔆 **共享核心架构**：所有 Skill 统一引用 `core/` 核心逻辑层，保证数据一致性与零代码重复
 - 🆓 **6 维评分体系**：盈利能力 / 财务安全 / 估值合理性 / 技术面 / 业务前景 / 新闻风险，满分 120 分
 - 🆗 **多数据源融合**：Tushare Pro（个股估值/行情🔄）、新浪财经（财务报表/K线）、东方财富（新闻/分红）、乐咕（市场PE）
@@ -23,6 +23,7 @@
 | `roce-calculator` | 近 10 年 ROCE（资本回报率）趋势 | 股票代码 | `FinancialAnalyzer` |
 | `a-dividend-analyzer` | A股分红配送（送转/现金分红/股息率/关键日期） | A股代码 | `DividendAnalyzer` |
 | `market-analyzer` | A 股市场整体状况（平均PE/上证指数MA20/MA50） | 无 | `MarketAnalyzer` |
+| `market-systemic-risk` | 市场系统性风险分析（多维度综合预警） | 无 | `MarketSystemicRiskAnalyzer` |
 | `shareholder-deep` | 股东深度分析 | 股票代码 | `ShareholderAnalyzer` |
 | `valuation-anchor` | 估值锚点分析 | 股票代码 | `StockAnalyzer` |
 | `email-sender` | 发送邮件（支持附件） | 收件人/主题/内容 | SMTP |
@@ -44,7 +45,7 @@ stock-analyzer-skills_tushare/           # 项目根目录
 │       │       ├── __init__.py
 │       │       ├── config/
 │   │       │   └── .env             # ⚠️ 统一配置文件（Tushare Token/SMTP/Tavily API Key）
-│       │       ├── analyzers/           # 分析器层，7 个 Analyzer 类
+│       │       ├── analyzers/           # 分析器层，8 个 Analyzer 类
 │       │       │   ├── __init__.py
 │       │       │   ├── market.py        # MarketAnalyzer（市场分析）
 │       │       │   ├── technical.py     # TechnicalAnalyzer（技术分析）
@@ -57,7 +58,7 @@ stock-analyzer-skills_tushare/           # 项目根目录
 │       │       │   ├── __init__.py
 │       │       │   ├── cache.py         # CacheManager（缓存）
 │       │       │   └── report.py        # ReportGenerator（评分 + 报告导出）
-│       │       └── skills/              # 13 个 Skill 入口（薄封装层）
+│       │       └── skills/              # 14 个 Skill 入口（薄封装层）
 │       │           ├── stock-analyzer/main.py
 │       │           ├── technical-analyzer/main.py
 │       │           ├── a-dividend-analyzer/main.py
@@ -70,6 +71,7 @@ stock-analyzer-skills_tushare/           # 项目根目录
 │       │           ├── email-sender/main.py
 │       │           ├── pdf-converter/main.py
 │       │           ├── akshare-docs/main.py
+│       │           ├── market-systemic-risk/main.py
 │       │           └── web-search/main.py
 │       └── [skill-name]/             # 各 Skill 目录（SKILL.md + 旧入口）
 │           ├── SKILL.md
@@ -87,9 +89,9 @@ stock-analyzer-skills_tushare/           # 项目根目录
 | 层级 | 目录 | 职责 |
 |------|------|------|
 | **向后兼容层** | `core/__init__.py` | 26 个包装函数 + 9 个类导出，委托给下层 Analyzer 类 |
-| **分析器层** | `core/src/analyzers/` | 7 个 Analyzer 类，数据获取 + 计算逻辑 |
+| **分析器层** | `core/src/analyzers/` | 8 个 Analyzer 类，数据获取 + 计算逻辑 |
 | **基础设施层** | `core/src/infra/` | CacheManager + ReportGenerator |
-| **入口层** | `core/src/skills/` | 13 个 skill 的 `main.py`，参数解析 + 格式化输出 |
+| **入口层** | `core/src/skills/` | 14 个 skill 的 `main.py`，参数解析 + 格式化输出 |
 
 ---
 
@@ -161,6 +163,7 @@ git submodule add <仓库URL> .opencode/skills/stock-analyzer
 skill(name="email-sender")  # 发送邮件
 skill(name="roce-calculator")
 skill(name="market-analyzer")
+skill(name="market-systemic-risk")
 skill(name="stock-analyzer")
 skill(name="technical-analyzer")
 skill(name="a-dividend-analyzer")
@@ -179,6 +182,7 @@ python .opencode/skills/core/src/skills/technical-analyzer/main.py 600519
 python .opencode/skills/core/src/skills/a-dividend-analyzer/main.py 600519
 python .opencode/skills/core/src/skills/roce-calculator/main.py 600519
 python .opencode/skills/core/src/skills/market-analyzer/main.py
+python .opencode/skills/core/src/skills/market-systemic-risk/main.py
 python .opencode/skills/core/src/skills/shareholder-deep/main.py 000651
 python .opencode/skills/core/src/skills/risk-analysis/main.py 600519
 python .opencode/skills/core/src/skills/valuation-anchor/main.py 600519
