@@ -2,7 +2,7 @@
 
 ## Repository Overview
 
-A股股票分析 OpenCode Skills 集合，基于 akshare 数据源。包含 16 个独立 Skill，可单独使用也可组合输出完整报告。
+A股股票分析 OpenCode Skills 集合，基于 akshare 数据源。包含 17 个独立 Skill，可单独使用也可组合输出完整报告。
 
 ## Key Entry Points
 
@@ -14,6 +14,7 @@ skill(name="a-dividend-analyzer")   # 分红配送
 skill(name="roce-calculator")       # ROCE 计算
 skill(name="market-analyzer")       # 市场分析
 skill(name="market-systemic-risk")  # 市场系统性风险分析
+skill(name="industry-analysis")     # 行业分析（排行/资金流/估值/轮动）
 skill(name="shareholder-deep")      # 股东深度分析
 skill(name="pdf-converter")        # PDF 转换
 skill(name="email-sender")         # 邮件发送
@@ -32,6 +33,7 @@ python .opencode/skills/core/src/skills/a-dividend-analyzer/main.py 600519
 python .opencode/skills/core/src/skills/roce-calculator/main.py 600519
 python .opencode/skills/core/src/skills/market-analyzer/main.py
 python .opencode/skills/core/src/skills/market-systemic-risk/main.py
+python .opencode/skills/core/src/skills/industry-analysis/main.py
 python .opencode/skills/core/src/skills/shareholder-deep/main.py 000651
 python .opencode/skills/core/src/skills/email-sender/main.py "收件人" "主题" "内容"
 python .opencode/skills/core/src/skills/pdf-converter/main.py "file.pdf"
@@ -90,6 +92,7 @@ stock-analyzer-skills_tushare/           # 项目根目录
 │       │           ├── pdf-converter/main.py
 │       │           ├── akshare-docs/main.py
 │       │           ├── market-systemic-risk/main.py
+│       │           ├── industry-analysis/main.py
 │       │           └── web-search/main.py
 │       └── [skill-name]/             # 各 Skill 目录（SKILL.md + 旧入口）
 │           ├── SKILL.md
@@ -152,6 +155,7 @@ stock-analyzer-skills_tushare/           # 项目根目录
 | roce-calculator | 股票代码 | 近 10 年 ROCE |
 | market-analyzer | 无 | 市场整体状况 |
 | market-systemic-risk | 无 | 市场系统性风险分析 |
+| industry-analysis | 无 | 行业分析（排行/资金流/估值/轮动） |
 | shareholder-deep | 股票代码 | 股东深度分析 |
 | pdf-converter | PDF 路径 | 转 Markdown |
 | email-sender | 收件人/标题/内容 | 发送邮件 |

@@ -6,6 +6,7 @@ analyzers - 分析器层
 数据获取 + 计算逻辑 统一封装在类内部。
 """
 
+from .industry import IndustryAnalyzer
 from .market import MarketAnalyzer, MarketSystemicRiskAnalyzer
 from .technical import TechnicalAnalyzer
 from .news import NewsRiskAnalyzer
@@ -15,6 +16,7 @@ from .stock import StockAnalyzer
 from .shareholder import ShareholderAnalyzer
 
 __all__ = [
+    "IndustryAnalyzer",
     "MarketAnalyzer",
     "MarketSystemicRiskAnalyzer",
     "TechnicalAnalyzer",
