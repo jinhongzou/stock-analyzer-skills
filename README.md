@@ -1,4 +1,4 @@
-# A 股股票分析 Skill 集
+# 基于Opencode的 A股分析 Skill 集
 
 基于 tushare/akshare  数据源的 A 股多维度分析 OpenCode Skills，覆盖 **盈利能力 (ROCE)/ 财务安全 / 估值合理性 / 技术面 / 股东分析 / 分红 / 新闻风险 / A股系统性风险等**  维度。
 **回测** SKILL开发中
