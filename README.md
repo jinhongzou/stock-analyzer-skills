@@ -1,4 +1,4 @@
-# A 股股票分析 Skill 集
+# 基于OpenCode的 A 股分析 Skill 集
 
 基于 akshare 数据源的 A 股多维度分析 OpenCode Skills，覆盖 **基本面分析** + **技术面分析** + **新闻风险评估** + **综合评分** 四大维度。
 
